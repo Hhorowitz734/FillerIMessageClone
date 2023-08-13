@@ -42,31 +42,34 @@ class Manager{
         }
 };
 
+//Defines manager that controls the game
+Manager manager;
 
-    class Square{
-        public:
 
-            //Color of the square
-            Color squarecolor;
+class Square{
+    public:
 
-            //Represents the squares surrounding the given square
-            Square* top = nullptr;
-            Square* bottom = nullptr;
-            Square* left = nullptr;
-            Square* right = nullptr;
+        //Color of the square
+        Color squarecolor;
 
-            //Represents the coordinates of the top left of the square
-            int positionX;
-            int positionY;
+        //Represents the squares surrounding the given square
+        Square* top = nullptr;
+        Square* bottom = nullptr;
+        Square* left = nullptr;
+        Square* right = nullptr;
 
-            Square(int posX, int posY) : positionX(posX), positionY(posY) {
+        //Represents the coordinates of the top left of the square
+        int positionX;
+        int positionY;
 
-            };
-        
-        void display(){
-            DrawRectangle(positionX + 1, positionY + 1, positionX + Manager::squareWidth - 1, positionY + Manager::squareHeight - 1, squarecolor);
-        }
-    };
+        Square(int posX, int posY, Color blockcolor) : positionX(posX), positionY(posY), squarecolor(blockcolor) {};
+    
+    void display(){
+
+        int offset = 5; //sets a small ofset so blocks arent all together
+        DrawRectangle(positionX + offset, positionY + offset, manager.squareWidth - (2 * offset), manager.squareWidth - (2 * offset), squarecolor);
+    }
+};
 
 //Static member variables of Manager
 //DEFINES GAME SETTINGS
@@ -76,8 +79,6 @@ int Manager::AuxHeight = 150;
 
 int Manager::squares = 100;
 
-Manager manager;
-
 int main()
 {
     // Initialize the window and set the frame rate
@@ -86,7 +87,9 @@ int main()
     ClearBackground(BLACK);
 
 
-    //DO ANY NODE TESTING HERE
+    //DO ANY TESTING HERE
+    Square squaretest(0, 0, {255, 0, 0, 255});
+    Square squaretest2(manager.squareWidth, manager.squareWidth, {0, 255, 0, 255});
 
     // Main game loop
     while (!WindowShouldClose())
@@ -97,6 +100,9 @@ int main()
         ClearBackground(BLACK);
 
         manager.drawBoard();
+
+        squaretest.display();
+        squaretest2.display();
 
         
 
