@@ -4,8 +4,12 @@
 #include <vector>
 #include <random>
 #include <cmath>
+#include <ctime>
+#include <cstdlib>
 
 //cd "/Users/bhorowitz/Documents/CPLUSPLUS/Filler/" && g++ filler.cpp -o filler -I/opt/homebrew/Cellar/raylib/4.5.0/include -L/opt/homebrew/lib -lraylib -std=c++11 && "/Users/bhorowitz/Documents/CPLUSPLUS/Filler/filler"
+
+class Square;
 
 class Manager{
     // Manages the state of the game, holds crucial variables, etc
@@ -15,31 +19,41 @@ class Manager{
         static int GameHeight;
         static int AuxHeight;
 
-        // Number of squares
-        static int squares; // Value MUST be a perfect square
+        // Number of numSquares
+        static int numSquares; // Value MUST be a perfect square
+
+        //Stores all squares
+        static std::vector<Square*> squares;
+
+        //Colors of the base game
+        static Color gamecolors[6];
 
         // Square dim information (squareWidth = squareHeight)
-        int squareWidth = GameWidth / sqrt(static_cast<double>(squares));
+        int squareWidth = GameWidth / sqrt(static_cast<double>(numSquares));
 
         // Represents number of lines for the game board
-        double numLines = sqrt(static_cast<double>(squares));
+        double numLines = sqrt(static_cast<double>(numSquares));
 
         Manager() {
-            // Confirms that squares was indeed a perfect square
+            // Confirms that numSquares was indeed a perfect square
             if (numLines != static_cast<int>(numLines)){
-                std::cout << "Please pick a perfect square for squares in manager.\n\n\n\n\n";
+                std::cout << "Please pick a perfect square for numSquares in manager.\n\n\n\n\n";
                 exit(1); // Exit the program
             }
         }
     
-        void drawBoard() {
-            // Draws the lines of the gameboard
-            for (int i = 0; i < static_cast<int>(numLines); i++){
-                DrawLine(0, i * squareWidth, GameWidth, i * squareWidth, WHITE);
-                DrawLine(i * squareWidth, 0, i * squareWidth, GameHeight, WHITE);
-            }
-            DrawLine(0, GameHeight, GameWidth, GameHeight, WHITE);
+    void drawBoard() {
+        // Draws the lines of the gameboard
+        for (int i = 0; i < static_cast<int>(numLines); i++){
+            DrawLine(0, i * squareWidth, GameWidth, i * squareWidth, WHITE);
+            DrawLine(i * squareWidth, 0, i * squareWidth, GameHeight, WHITE);
         }
+        DrawLine(0, GameHeight, GameWidth, GameHeight, WHITE);
+    }
+
+    void setupSquares();
+
+        
 };
 
 //Defines manager that controls the game
@@ -62,7 +76,9 @@ class Square{
         int positionX;
         int positionY;
 
-        Square(int posX, int posY, Color blockcolor) : positionX(posX), positionY(posY), squarecolor(blockcolor) {};
+        Square(int posX, int posY, Color blockcolor) : positionX(posX), positionY(posY), squarecolor(blockcolor) {
+            Manager::squares.push_back(this);
+        };
     
     void display(){
 
@@ -71,13 +87,41 @@ class Square{
     }
 };
 
+
 //Static member variables of Manager
 //DEFINES GAME SETTINGS
 int Manager::GameWidth = 600;
 int Manager::GameHeight = 600;
 int Manager::AuxHeight = 150;
 
-int Manager::squares = 100;
+int Manager::numSquares = 49;
+std::vector<Square*> Manager::squares;
+
+Color Manager::gamecolors[6] = {
+    {255, 0, 0, 255}, //0 - red
+    {0, 255, 0, 255}, //1 - green
+    {255, 255, 0, 255}, //2 - yellow
+    {0, 0, 255, 255}, //3 - blue
+    {128, 0, 128, 255}, //4 - purple
+    {0, 0, 0, 0} //5 - black
+};
+
+//SetupSquares
+void Manager::setupSquares(){
+
+    //Sets up squares based on colors
+    int colorsArraySize = sizeof(gamecolors) / sizeof(gamecolors[0]);
+    srand(time(NULL));
+
+    for (int i = 0; i < static_cast<int>(numLines); i++){
+        for (int j = 0; j < static_cast<int>(numLines); j++){
+            int randomIndex = rand() % colorsArraySize;
+            std::cout << randomIndex << '\n';
+            Square* newsquare = new Square(i * squareWidth, j * squareWidth, gamecolors[randomIndex]);
+        }
+    }
+
+}
 
 int main()
 {
@@ -86,10 +130,7 @@ int main()
     SetTargetFPS(60);
     ClearBackground(BLACK);
 
-
-    //DO ANY TESTING HERE
-    Square squaretest(0, 0, {255, 0, 0, 255});
-    Square squaretest2(manager.squareWidth, manager.squareWidth, {0, 255, 0, 255});
+    manager.setupSquares();
 
     // Main game loop
     while (!WindowShouldClose())
@@ -101,8 +142,9 @@ int main()
 
         manager.drawBoard();
 
-        squaretest.display();
-        squaretest2.display();
+        for (Square* square : Manager::squares){
+            square->display();
+        }
 
         
 
