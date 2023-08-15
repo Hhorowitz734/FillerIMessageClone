@@ -6,6 +6,8 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <algorithm>
+#include <unordered_map>
 
 //cd "/Users/bhorowitz/Documents/CPLUSPLUS/Filler/" && g++ filler.cpp -o filler -I/opt/homebrew/Cellar/raylib/4.5.0/include -L/opt/homebrew/lib -lraylib -std=c++11 && "/Users/bhorowitz/Documents/CPLUSPLUS/Filler/filler"
 
@@ -26,7 +28,7 @@ class Manager{
         static std::vector<Square*> squares;
 
         //Colors of the base game
-        static Color gamecolors[6];
+        static std::vector<Color> gamecolors;
 
         // Square dim information (squareWidth = squareHeight)
         int squareWidth = GameWidth / sqrt(static_cast<double>(numSquares));
@@ -76,6 +78,9 @@ class Square{
         int positionX;
         int positionY;
 
+        //Hitbox for raylib
+        Rectangle squarebox = {static_cast<float>(positionX), static_cast<float>(positionY), static_cast<float>(manager.squareWidth), static_cast<float>(manager.squareWidth)};
+
         Square(int posX, int posY, Color blockcolor) : positionX(posX), positionY(posY), squarecolor(blockcolor) {
             Manager::squares.push_back(this);
         };
@@ -84,6 +89,7 @@ class Square{
 
         int offset = 5; //sets a small ofset so blocks arent all together
         DrawRectangle(positionX + offset, positionY + offset, manager.squareWidth - (2 * offset), manager.squareWidth - (2 * offset), squarecolor);
+    
     }
 };
 
@@ -94,33 +100,47 @@ int Manager::GameWidth = 600;
 int Manager::GameHeight = 600;
 int Manager::AuxHeight = 150;
 
-int Manager::numSquares = 49;
+int Manager::numSquares = 25;
 std::vector<Square*> Manager::squares;
 
-Color Manager::gamecolors[6] = {
-    {255, 0, 0, 255}, //0 - red
-    {0, 255, 0, 255}, //1 - green
-    {255, 255, 0, 255}, //2 - yellow
-    {0, 0, 255, 255}, //3 - blue
-    {128, 0, 128, 255}, //4 - purple
-    {0, 0, 0, 0} //5 - black
+std::vector<Color> Manager::gamecolors = {
+    {255, 0, 0, 255},     // 0 - red
+    {0, 255, 0, 255},     // 1 - green
+    {255, 255, 0, 255},   // 2 - yellow
+    {0, 0, 255, 255},     // 3 - blue
+    {128, 0, 128, 255},   // 4 - purple
+    {0, 0, 0, 0}          // 5 - black
 };
 
 //SetupSquares
-void Manager::setupSquares(){
 
-    //Sets up squares based on colors
-    int colorsArraySize = sizeof(gamecolors) / sizeof(gamecolors[0]);
-    srand(time(NULL));
+bool areColorsEqual(const Color& c1, const Color& c2) {
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a;
+}
 
-    for (int i = 0; i < static_cast<int>(numLines); i++){
-        for (int j = 0; j < static_cast<int>(numLines); j++){
-            int randomIndex = rand() % colorsArraySize;
-            std::cout << randomIndex << '\n';
-            Square* newsquare = new Square(i * squareWidth, j * squareWidth, gamecolors[randomIndex]);
-        }
-    }
 
+bool isSafeColor(int row, int col, Color color) {
+    // Check top neighbor
+    if (row > 0 && areColorsEqual(Manager::squares[(row-1) * static_cast<int>(manager.numLines) + col]->squarecolor, color))
+        return false;
+
+    // Check left neighbor
+    if (col > 0 && areColorsEqual(Manager::squares[row * static_cast<int>(manager.numLines) + (col-1)]->squarecolor, color))
+        return false;
+
+    // Check right neighbor
+    if (col < static_cast<int>(manager.numLines) - 1 && areColorsEqual(Manager::squares[row * static_cast<int>(manager.numLines) + (col+1)]->squarecolor, color))
+        return false;
+
+    // Check bottom neighbor
+    if (row < static_cast<int>(manager.numLines) - 1 && areColorsEqual(Manager::squares[(row+1) * static_cast<int>(manager.numLines) + col]->squarecolor, color))
+        return false;
+
+    return true;
+}
+
+void Manager::setupSquares() {
+    //Write this method here
 }
 
 int main()
@@ -147,7 +167,13 @@ int main()
         }
 
         
+        for (Square* square : Manager::squares){
 
+            //Executes if a button is pressed
+            if (CheckCollisionPointRec(GetMousePosition(), square->squarebox) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                std::cout << "Square " << (square->positionX / manager.squareWidth) * manager.numLines + (square->positionY / manager.squareWidth) << " has been pressed.\n";
+            }
+        }
 
 
         EndDrawing();
